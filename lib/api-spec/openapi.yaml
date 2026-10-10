@@ -1,22 +1,21 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: TestPilot QA management API
 servers:
   - url: /api
-    description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: test-cases
+  - name: bugs
+  - name: test-runs
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +23,296 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /test-cases:
+    get:
+      operationId: listTestCases
+      tags: [test-cases]
+      summary: List test cases
+      responses:
+        "200":
+          description: Test cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TestCase" }
+    post:
+      operationId: createTestCase
+      tags: [test-cases]
+      summary: Create a test case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TestCaseInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TestCase" }
+  /test-cases/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    get:
+      operationId: getTestCase
+      tags: [test-cases]
+      summary: Get a test case
+      responses:
+        "200":
+          description: Test case
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TestCase" }
+        "404": { description: Not found }
+    patch:
+      operationId: updateTestCase
+      tags: [test-cases]
+      summary: Update a test case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TestCaseUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TestCase" }
+    delete:
+      operationId: deleteTestCase
+      tags: [test-cases]
+      summary: Delete a test case
+      responses:
+        "204": { description: Deleted }
+  /bugs:
+    get:
+      operationId: listBugs
+      tags: [bugs]
+      summary: List bugs
+      responses:
+        "200":
+          description: Bug reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Bug" }
+    post:
+      operationId: createBug
+      tags: [bugs]
+      summary: Create a bug
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BugInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Bug" }
+  /bugs/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    get:
+      operationId: getBug
+      tags: [bugs]
+      summary: Get a bug
+      responses:
+        "200":
+          description: Bug report
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Bug" }
+        "404": { description: Not found }
+    patch:
+      operationId: updateBug
+      tags: [bugs]
+      summary: Update a bug
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BugUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Bug" }
+    delete:
+      operationId: deleteBug
+      tags: [bugs]
+      summary: Delete a bug
+      responses:
+        "204": { description: Deleted }
+  /test-runs:
+    get:
+      operationId: listTestRuns
+      tags: [test-runs]
+      summary: List test runs
+      responses:
+        "200":
+          description: Test runs
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TestRun" }
+    post:
+      operationId: createTestRun
+      tags: [test-runs]
+      summary: Record a test run
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TestRunInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TestRun" }
+  /demo/reset:
+    post:
+      operationId: resetDemoData
+      tags: [test-cases, bugs, test-runs]
+      summary: Restore editable demo data
+      responses:
+        "200":
+          description: Demo data restored
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResetResult" }
 components:
   schemas:
     HealthStatus:
       type: object
       properties:
-        status:
-          type: string
-      required:
-        - status
-
+        status: { type: string }
+      required: [status]
+    TestCase:
+      type: object
+      required: [id, title, module, preconditions, steps, testData, expectedResult, actualResult, priority, status, createdAt]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        module: { type: string }
+        preconditions: { type: string }
+        steps: { type: string }
+        testData: { type: string }
+        expectedResult: { type: string }
+        actualResult: { type: string }
+        priority: { type: string, enum: [Low, Medium, High, Critical] }
+        status: { type: string, enum: [Not Run, Pass, Fail, Blocked] }
+        createdAt: { type: string }
+    TestCaseInput:
+      type: object
+      required: [title, module, preconditions, steps, testData, expectedResult, priority]
+      properties:
+        title: { type: string, minLength: 1 }
+        module: { type: string, minLength: 1 }
+        preconditions: { type: string }
+        steps: { type: string, minLength: 1 }
+        testData: { type: string }
+        expectedResult: { type: string, minLength: 1 }
+        actualResult: { type: string }
+        priority: { type: string, enum: [Low, Medium, High, Critical] }
+        status: { type: string, enum: [Not Run, Pass, Fail, Blocked] }
+    TestCaseUpdate:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        module: { type: string, minLength: 1 }
+        preconditions: { type: string }
+        steps: { type: string, minLength: 1 }
+        testData: { type: string }
+        expectedResult: { type: string, minLength: 1 }
+        actualResult: { type: string }
+        priority: { type: string, enum: [Low, Medium, High, Critical] }
+        status: { type: string, enum: [Not Run, Pass, Fail, Blocked] }
+    Bug:
+      type: object
+      required: [id, title, description, stepsToReproduce, expectedResult, actualResult, environment, module, severity, priority, status, assignee, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string, minLength: 1 }
+        stepsToReproduce: { type: string, minLength: 1 }
+        expectedResult: { type: string, minLength: 1 }
+        actualResult: { type: string, minLength: 1 }
+        environment: { type: string, minLength: 1 }
+        module: { type: string }
+        severity: { type: string, enum: [Critical, Major, Minor, Trivial] }
+        priority: { type: string, enum: [High, Medium, Low] }
+        status: { type: string, enum: [Open, In Progress, Fixed, Retest, Closed, Reopened] }
+        assignee: { type: string }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+    BugInput:
+      type: object
+      required: [title, description, stepsToReproduce, expectedResult, actualResult, environment, module, severity, priority]
+      properties:
+        title: { type: string, minLength: 1 }
+        description: { type: string, minLength: 1 }
+        stepsToReproduce: { type: string, minLength: 1 }
+        expectedResult: { type: string, minLength: 1 }
+        actualResult: { type: string, minLength: 1 }
+        environment: { type: string, minLength: 1 }
+        module: { type: string, minLength: 1 }
+        severity: { type: string, enum: [Critical, Major, Minor, Trivial] }
+        priority: { type: string, enum: [High, Medium, Low] }
+        status: { type: string, enum: [Open, In Progress, Fixed, Retest, Closed, Reopened] }
+        assignee: { type: string }
+    BugUpdate:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        description: { type: string, minLength: 1 }
+        stepsToReproduce: { type: string, minLength: 1 }
+        expectedResult: { type: string, minLength: 1 }
+        actualResult: { type: string, minLength: 1 }
+        environment: { type: string, minLength: 1 }
+        module: { type: string, minLength: 1 }
+        severity: { type: string, enum: [Critical, Major, Minor, Trivial] }
+        priority: { type: string, enum: [High, Medium, Low] }
+        status: { type: string, enum: [Open, In Progress, Fixed, Retest, Closed, Reopened] }
+        assignee: { type: string }
+    RunOutcome:
+      type: object
+      required: [testCaseId, status, actualResult, notes]
+      properties:
+        testCaseId: { type: string }
+        status: { type: string, enum: [Not Run, Pass, Fail, Blocked] }
+        actualResult: { type: string }
+        notes: { type: string }
+        bugId: { type: ["string", "null"] }
+    TestRun:
+      type: object
+      required: [id, module, name, executedAt, outcomes]
+      properties:
+        id: { type: string }
+        module: { type: string }
+        name: { type: string }
+        executedAt: { type: string }
+        outcomes:
+          type: array
+          items: { $ref: "#/components/schemas/RunOutcome" }
+    TestRunInput:
+      type: object
+      required: [module, name, outcomes]
+      properties:
+        module: { type: string, minLength: 1 }
+        name: { type: string, minLength: 1 }
+        outcomes:
+          type: array
+          items: { $ref: "#/components/schemas/RunOutcome" }
+    ResetResult:
+      type: object
+      required: [success]
+      properties:
+        success: { type: boolean }

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "TestPilot AI"
+description = "A responsive QA platform for managing test cases, bug reports, test runs, and execution reports. Includes persistent demo data and a rule-based test case generator."
+version = "1.0.0"
+id = "artifacts/testpilot-ai"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21507
+
+[services.development]
+run = "pnpm --filter @workspace/testpilot-ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/testpilot-ai", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/testpilot-ai/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21507"
+BASE_PATH = "/"
